@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"reflect"
+	"runtime"
 )
 
 // HelloHandler .
@@ -11,11 +13,19 @@ type HelloHandler struct{}
 // WorldHandler .
 type WorldHandler struct{}
 
-func (h *HelloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func hello(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello!")
 }
-func (h *WorldHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func world(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "World!")
+}
+
+func log(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := runtime.FuncForPC(reflect.ValueOf(h).Pointer()).Name()
+		fmt.Println("Handler function called - " + name)
+		h(w, r)
+	}
 }
 
 func main() {
@@ -41,11 +51,8 @@ func main() {
 	// mux.Handle("/thread/post", postThread)
 	// mux.Handle("/thread/read", readThread)
 
-	helloHandler := HelloHandler{}
-	worldHandler := WorldHandler{}
-
-	http.Handle("/hello", &helloHandler)
-	http.Handle("/world", &worldHandler)
+	http.HandleFunc("/hello", log(hello))
+	http.HandleFunc("/world", world)
 
 	server := &http.Server{
 		Addr: "0.0.0.0:8080",
