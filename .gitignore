@@ -1,0 +1,4 @@
+vendor/
+server.crt
+server.key
+server.key.pem

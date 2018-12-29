@@ -5,16 +5,23 @@ import (
 	"net/http"
 )
 
+// MyHandler .
+type MyHandler struct{}
+
+func (h *MyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello, World!")
+}
+
 func main() {
 	// Mux for handling routes
-	mux := http.NewServeMux()
+	// mux := http.NewServeMux()
 
-	fileDir := http.Dir("./public/")
-	fileServer := http.FileServer(fileDir)
+	// fileDir := http.Dir("./public/")
+	// fileServer := http.FileServer(fileDir)
 
-	mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
+	// mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
 
-	mux.HandleFunc("/", index)
+	// mux.HandleFunc("/", index)
 	// mux.Handle("/err", err)
 
 	// mux.Handle("/login", login)
@@ -28,9 +35,11 @@ func main() {
 	// mux.Handle("/thread/post", postThread)
 	// mux.Handle("/thread/read", readThread)
 
+	handler := MyHandler{}
+
 	server := &http.Server{
 		Addr:    "0.0.0.0:8080",
-		Handler: mux,
+		Handler: &handler, // mux
 		// TLSConfig:    *tls.Config,
 		// ReadTimeout:    time.Duration,
 		// ReadHeaderTimeout:    time.Duration,
@@ -51,7 +60,8 @@ func main() {
 		// onShutdown    []func(),
 	}
 
-	server.ListenAndServe()
+	// server.ListenAndServe()
+	server.ListenAndServeTLS("server.crt", "server.key")
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
