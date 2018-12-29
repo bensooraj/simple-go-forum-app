@@ -5,11 +5,17 @@ import (
 	"net/http"
 )
 
-// MyHandler .
-type MyHandler struct{}
+// HelloHandler .
+type HelloHandler struct{}
 
-func (h *MyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, World!")
+// WorldHandler .
+type WorldHandler struct{}
+
+func (h *HelloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello!")
+}
+func (h *WorldHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "World!")
 }
 
 func main() {
@@ -35,11 +41,15 @@ func main() {
 	// mux.Handle("/thread/post", postThread)
 	// mux.Handle("/thread/read", readThread)
 
-	handler := MyHandler{}
+	helloHandler := HelloHandler{}
+	worldHandler := WorldHandler{}
+
+	http.Handle("/hello", &helloHandler)
+	http.Handle("/world", &worldHandler)
 
 	server := &http.Server{
-		Addr:    "0.0.0.0:8080",
-		Handler: &handler, // mux
+		Addr: "0.0.0.0:8080",
+		// Handler: &handler, // mux
 		// TLSConfig:    *tls.Config,
 		// ReadTimeout:    time.Duration,
 		// ReadHeaderTimeout:    time.Duration,
