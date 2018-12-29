@@ -28,3 +28,11 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/julienschmidt/httprouter"
+  version = "1.2.0"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/net"

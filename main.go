@@ -3,60 +3,27 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"reflect"
-	"runtime"
+
+	"golang.org/x/net/http2"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-// HelloHandler .
-type HelloHandler struct{}
-
-// WorldHandler .
-type WorldHandler struct{}
-
-func hello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello!")
-}
-func world(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "World!")
-}
-
-func log(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		name := runtime.FuncForPC(reflect.ValueOf(h).Pointer()).Name()
-		fmt.Println("Handler function called - " + name)
-		h(w, r)
-	}
+func hello(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Hello, %s!\n", p.ByName("name"))
 }
 
 func main() {
 	// Mux for handling routes
 	// mux := http.NewServeMux()
+	mux := httprouter.New()
 
-	// fileDir := http.Dir("./public/")
-	// fileServer := http.FileServer(fileDir)
-
-	// mux.Handle("/static/", http.StripPrefix("/static/", fileServer))
-
-	// mux.HandleFunc("/", index)
-	// mux.Handle("/err", err)
-
-	// mux.Handle("/login", login)
-	// mux.Handle("/logout", logout)
-	// mux.Handle("/signup", signup)
-	// mux.Handle("/signup_account", signup_account)
-	// mux.Handle("/authenticate", authenticate)
-
-	// mux.Handle("/thread/new", newThread)
-	// mux.Handle("/thread/create", createThread)
-	// mux.Handle("/thread/post", postThread)
-	// mux.Handle("/thread/read", readThread)
-
-	http.HandleFunc("/hello", log(hello))
-	http.HandleFunc("/world", world)
+	mux.GET("/hello/:name", hello)
 
 	server := &http.Server{
-		Addr: "0.0.0.0:8080",
-		// Handler: &handler, // mux
+		Addr:    "0.0.0.0:8080",
+		Handler: mux,
 		// TLSConfig:    *tls.Config,
 		// ReadTimeout:    time.Duration,
 		// ReadHeaderTimeout:    time.Duration,
@@ -77,23 +44,12 @@ func main() {
 		// onShutdown    []func(),
 	}
 
+	http2.ConfigureServer(server, &http2.Server{})
 	// server.ListenAndServe()
 	server.ListenAndServeTLS("server.crt", "server.key")
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-	// files := []string{
-	// 	"template/layout.html",
-	// 	"template/navbar.html",
-	// 	"template/index.html",
-	// }
-
-	// templates := template.Must(template.ParseFiles(files...))
-
-	// threads, err := data.Threads()
-	// if err == nil {
-	// 	templates.ExecuteTemplate(w, "layout", threads)
-	// }
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Hello, World!")
 }
