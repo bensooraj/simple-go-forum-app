@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -41,6 +42,30 @@ func body(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 }
 
+func processForm(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	r.ParseForm()
+	fmt.Fprintln(w, r.Form)
+}
+
+func processPostForm(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	r.ParseForm()
+	fmt.Fprintln(w, r.PostForm)
+}
+
+func processMultipartForm(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	r.ParseMultipartForm(1024)
+	fileHeader := r.MultipartForm.File["file"][0]
+	file, err := fileHeader.Open()
+	if err == nil {
+		data, err := ioutil.ReadAll(file)
+		if err == nil {
+			fmt.Fprintln(w, string(data))
+		}
+	}
+
+	fmt.Fprintln(w, r.MultipartForm)
+}
+
 func main() {
 	// Mux for handling routes
 	// mux := http.NewServeMux()
@@ -49,7 +74,9 @@ func main() {
 	mux.GET("/hello/:name", hello)
 	mux.GET("/headers", headers)
 	mux.GET("/body", body)
-	// mux.GET("/process-form", processForm)
+	mux.POST("/process-form", processForm)
+	mux.POST("/process-post-form", processPostForm)
+	mux.POST("/process-multipart-form", processMultipartForm)
 
 	server := &http.Server{
 		Addr:    "0.0.0.0:8080",
