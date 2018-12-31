@@ -66,6 +66,26 @@ func processMultipartForm(w http.ResponseWriter, r *http.Request, p httprouter.P
 	fmt.Fprintln(w, r.MultipartForm)
 }
 
+func writeExample(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	str := `
+	    <html>
+        <head><title>Go Web Programming</title></head>
+        <body><h1>Hello World</h1></body>
+        </html>
+	`
+	w.Write([]byte(str))
+}
+
+func writeHeaderExample(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	w.WriteHeader(http.StatusNotImplemented)
+	fmt.Fprintln(w, "No such service, try next door")
+}
+
+func headerExample(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	w.Header().Set("Location", "http://google.com")
+	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
 func main() {
 	// Mux for handling routes
 	// mux := http.NewServeMux()
@@ -77,6 +97,9 @@ func main() {
 	mux.POST("/process-form", processForm)
 	mux.POST("/process-post-form", processPostForm)
 	mux.POST("/process-multipart-form", processMultipartForm)
+	mux.POST("/write", writeExample)
+	mux.POST("/writeheader", writeHeaderExample)
+	mux.GET("/redirect", headerExample)
 
 	server := &http.Server{
 		Addr:    "0.0.0.0:8080",
