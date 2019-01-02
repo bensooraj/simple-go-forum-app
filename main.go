@@ -4,7 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -172,6 +174,100 @@ func showMessage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 }
 
+func templateExampleOne(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	t, err := template.ParseFiles("templates/tmpl.html")
+	if err != nil {
+		fmt.Fprintln(w, "Couldn't parse the template html file.")
+	} else {
+		t.Execute(w, "I love you Hannah!")
+	}
+}
+
+func templateExampleTwo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	rand.Seed(time.Now().Unix())
+	t, err := template.ParseFiles("templates/conditional.html")
+	if err != nil {
+		fmt.Fprintln(w, "Couldn't parse the conditional html file.")
+	} else {
+		t.Execute(w, rand.Intn(10) > 5)
+	}
+}
+
+func templateExampleThree(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	rand.Seed(time.Now().Unix())
+	// daysOfWeek := []string{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
+	daysOfWeek := []string{}
+
+	t, err := template.ParseFiles("templates/iterator.html")
+	if err != nil {
+		fmt.Fprintln(w, "Couldn't parse the conditional html file.")
+	} else {
+		t.Execute(w, daysOfWeek)
+	}
+}
+
+func templateExampleFour(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	t, err := template.ParseFiles("templates/set_action.html")
+	if err != nil {
+		fmt.Fprintln(w, "Couldn't parse the conditional html file.")
+	} else {
+		t.Execute(w, "Hello, World!")
+	}
+}
+
+func templateExampleFive(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	t, err := template.ParseFiles("templates/include_t1.html", "templates/include_t2.html")
+	if err != nil {
+		fmt.Fprintln(w, "Couldn't parse the include html file(s).")
+	} else {
+		fmt.Println(t)
+		t.Execute(w, "Hello, World!")
+	}
+}
+
+func formatDate(t time.Time) string {
+	layout := "2019-01-01"
+	return t.Format(layout)
+}
+
+func templateExampleFunc(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	funcMap := template.FuncMap{"fdate": formatDate}
+	t := template.New("func_map.html").Funcs(funcMap)
+	t, _ = t.ParseFiles("templates/func_map.html")
+	t.Execute(w, time.Now())
+}
+
+func templateExampleSeven(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	t, err := template.ParseFiles("templates/context_1.html")
+	if err != nil {
+		fmt.Fprintln(w, "Couldn't parse the include html file(s).")
+	} else {
+		content := `I asked: <i>"What's up?"</i>`
+		t.Execute(w, content)
+	}
+}
+
+func templateExampleEight(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	t, err := template.ParseFiles("templates/xss_form.html")
+	if err != nil {
+		fmt.Fprintln(w, "Couldn't parse the XSS html form file.")
+	} else {
+		t.Execute(w, nil)
+	}
+}
+
+func templateExampleXSSTest(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	r.ParseForm()
+	w.Header().Set("X-XSS-Protection", "0")
+	t, err := template.ParseFiles("templates/xss_test.html")
+	if err != nil {
+		fmt.Fprintln(w, "Couldn't parse the XSS test form file.")
+	} else {
+		// t.Execute(w, r.PostFormValue("comment"))
+		t.Execute(w, template.HTML(r.PostFormValue("comment")))
+	}
+}
+
 func main() {
 	// Mux for handling routes
 	// mux := http.NewServeMux()
@@ -193,6 +289,18 @@ func main() {
 
 	mux.GET("/set_message", setMessage)
 	mux.GET("/show_message", showMessage)
+
+	mux.GET("/template/example/one", templateExampleOne)
+	mux.GET("/template/example/two", templateExampleTwo)
+	mux.GET("/template/example/three", templateExampleThree)
+	mux.GET("/template/example/four", templateExampleFour)
+	mux.GET("/template/example/five", templateExampleFive)
+	mux.GET("/template/example/six", templateExampleFunc)
+	mux.GET("/template/example/seven", templateExampleSeven)
+
+	// XSS Test
+	mux.GET("/template/example/eight", templateExampleEight)
+	mux.POST("/template/example/xss_test", templateExampleXSSTest)
 
 	server := &http.Server{
 		Addr:    "0.0.0.0:8080",
