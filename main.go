@@ -19,6 +19,24 @@ type Post struct {
 	Threads []string
 }
 
+// PostV1 .
+type PostV1 struct {
+	ID      int
+	Content string
+	Author  string
+}
+
+// PostByID .
+var PostByID map[int]*PostV1
+
+// PostsByAuthor .
+var PostsByAuthor map[string][]*PostV1
+
+func store(post PostV1) {
+	PostByID[post.ID] = &post
+	PostsByAuthor[post.Author] = append(PostsByAuthor[post.Author], &post)
+}
+
 func hello(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Hello, %s!\n", p.ByName("name"))
@@ -301,6 +319,27 @@ func main() {
 	// XSS Test
 	mux.GET("/template/example/eight", templateExampleEight)
 	mux.POST("/template/example/xss_test", templateExampleXSSTest)
+
+	// App Memory Store test
+	PostByID = make(map[int]*PostV1)
+	PostsByAuthor = make(map[string][]*PostV1)
+
+	post1 := PostV1{ID: 1, Content: "Hello World!", Author: "Sau Sheong"}
+	post2 := PostV1{ID: 2, Content: "Bonjour Monde!", Author: "Pierre"}
+	post3 := PostV1{ID: 3, Content: "Hola Mundo!", Author: "Pedro"}
+	post4 := PostV1{ID: 4, Content: "Greetings Earthlings!", Author: "Sau Sheong"}
+
+	store(post1)
+	store(post2)
+	store(post3)
+	store(post4)
+
+	fmt.Println(PostByID[1])
+	fmt.Println(PostByID[2])
+
+	for _, authorPost := range PostsByAuthor["Sau Sheong"] {
+		fmt.Println(authorPost)
+	}
 
 	server := &http.Server{
 		Addr:    "0.0.0.0:8080",
