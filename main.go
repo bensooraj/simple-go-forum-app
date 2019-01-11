@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"io/ioutil"
 )
 
@@ -27,6 +28,20 @@ func store(data interface{}, fileName string) {
 	}
 }
 
+func load(data interface{}, fileName string) {
+	raw, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		panic(err)
+	}
+
+	bytesBuffer := bytes.NewBuffer(raw)
+	bytesDecoder := gob.NewDecoder(bytesBuffer)
+	err = bytesDecoder.Decode(data)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
 
 	allPosts := []Post{
@@ -37,5 +52,9 @@ func main() {
 	}
 
 	store(allPosts, "gob_file_1")
+
+	var postsRead []Post
+	load(&postsRead, "gob_file_1")
+	fmt.Printf("\npostsRead: %v\n", postsRead)
 
 }
