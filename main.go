@@ -22,7 +22,7 @@ func store(data interface{}, fileName string) {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile(fileName, bytesBuffer.Bytes(), 0644)
+	err = ioutil.WriteFile(fileName, bytesBuffer.Bytes(), 0600)
 	if err != nil {
 		panic(err)
 	}
