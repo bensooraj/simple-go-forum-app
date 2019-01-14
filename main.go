@@ -17,9 +17,10 @@ type Post struct {
 // Db .
 var Db *sql.DB
 
-func initDB() {
-	connStr := "user=gwp dbname=gwp sslmode=disable host=localhost port=5432"
-	Db, err := sql.Open("postgres", connStr)
+func init() {
+	var err error
+	connStr := "user=gwp password=gwp dbname=gwp sslmode=disable host=localhost port=5432"
+	Db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		panic(err)
 	} else {
@@ -28,6 +29,25 @@ func initDB() {
 
 }
 
+// Create .
+func (post *Post) Create() (err error) {
+	statement := "INSERT INTO posts (content, author) VALUES ($1, $2) RETURNING id"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(post.Content, post.Author).Scan(&post.ID)
+	return
+}
+
 func main() {
-	initDB()
+	post := Post{Content: "Hello World!", Author: "Sau Sheong"}
+	fmt.Println(post)
+	err := post.Create()
+	if err != nil {
+		fmt.Printf("Error inserting post: %v\n", err)
+	}
+	fmt.Println(post)
 }
