@@ -1,19 +1,19 @@
 package main
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
 // Post .
 type Post struct {
-	ID       int
-	Content  string
-	Author   string
-	Comments []Comment
+	ID         int
+	Content    string
+	AuthorName string `db:"author"`
+	Comments   []Comment
 }
 
 // Comment .
@@ -25,12 +25,12 @@ type Comment struct {
 }
 
 // Db .
-var Db *sql.DB
+var Db *sqlx.DB
 
 func init() {
 	var err error
 	connStr := "user=gwp password=gwp dbname=gwp sslmode=disable host=localhost port=5432"
-	Db, err = sql.Open("postgres", connStr)
+	Db, err = sqlx.Open("postgres", connStr)
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +45,7 @@ func (post *Post) Create() (err error) {
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(post.Content, post.Author).Scan(&post.ID)
+	err = stmt.QueryRow(post.Content, post.AuthorName).Scan(&post.ID)
 	return
 }
 
@@ -65,10 +65,11 @@ func (comment *Comment) Create() (err error) {
 func GetPost(id int) (post Post, err error) {
 	post = Post{}
 	post.Comments = []Comment{}
-	Db.QueryRow("SELECT id, content, author FROM posts WHERE id=$1", id).Scan(&post.ID, &post.Content, &post.Author)
+	// Db.QueryRow("SELECT id, content, author FROM posts WHERE id=$1", id).Scan(&post.ID, &post.Content, &post.AuthorName)
+	Db.QueryRowx("SELECT id, content, author FROM posts WHERE id=$1", id).StructScan(&post)
 
 	// Retrieve comments as well
-	fmt.Printf("Post retrieved: %v\n\n", post.ID)
+	fmt.Printf("Post retrieved: %v\n\n", post)
 	rows, err := Db.Query("SELECT id, content, author FROM comments WHERE post_id=$1", post.ID)
 	if err != nil {
 		return
@@ -91,7 +92,7 @@ func GetPost(id int) (post Post, err error) {
 
 // Update .
 func (post *Post) Update() (err error) {
-	result, err := Db.Exec("update posts set content=$2, author=$3 where id=$1", post.ID, post.Content, post.Author)
+	result, err := Db.Exec("update posts set content=$2, author=$3 where id=$1", post.ID, post.Content, post.AuthorName)
 	fmt.Printf("\n\nResult returned after the update: %v\n\n", result)
 	return
 }
@@ -113,7 +114,7 @@ func Posts(limit int) (posts []Post, err error) {
 
 	for rows.Next() {
 		var post Post
-		err = rows.Scan(&post.ID, &post.Content, &post.Author)
+		err = rows.Scan(&post.ID, &post.Content, &post.AuthorName)
 		if err != nil {
 			return nil, err
 		}
@@ -154,8 +155,8 @@ func main() {
 	// 	p.Create()
 	// }
 	// post := Post{
-	// 	Content: "Pack Deer",
-	// 	Author:  "Gun",
+	// 	Content:    "Pack Deer",
+	// 	AuthorName: "Gun",
 	// }
 	// post.Create()
 
@@ -173,7 +174,7 @@ func main() {
 	// }
 	// comment.Create()
 
-	readPost, _ := GetPost(3)
+	readPost, _ := GetPost(4)
 	fmt.Printf("readPost: %v\n\n", readPost)
 	fmt.Printf("readPost.Comments: %v\n\n", readPost.Comments)
 	fmt.Println(readPost.Comments[0].Post)
