@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "github.com/lib/pq"
@@ -9,9 +10,18 @@ import (
 
 // Post .
 type Post struct {
+	ID       int
+	Content  string
+	Author   string
+	Comments []Comment
+}
+
+// Comment .
+type Comment struct {
 	ID      int
 	Content string
 	Author  string
+	Post    *Post
 }
 
 // Db .
@@ -39,10 +49,43 @@ func (post *Post) Create() (err error) {
 	return
 }
 
+// Create .
+func (comment *Comment) Create() (err error) {
+	if comment.Post == nil {
+		err = errors.New("Post Not Found")
+		return
+	}
+
+	err = Db.QueryRow("INSERT INTO comments (content, author, post_id) VALUES ($1, $2, $3) RETURNING id", comment.Content, comment.Author, comment.Post.ID).Scan(&comment.ID)
+
+	return
+}
+
 // GetPost .
 func GetPost(id int) (post Post, err error) {
 	post = Post{}
+	post.Comments = []Comment{}
 	Db.QueryRow("SELECT id, content, author FROM posts WHERE id=$1", id).Scan(&post.ID, &post.Content, &post.Author)
+
+	// Retrieve comments as well
+	fmt.Printf("Post retrieved: %v\n\n", post.ID)
+	rows, err := Db.Query("SELECT id, content, author FROM comments WHERE post_id=$1", post.ID)
+	if err != nil {
+		return
+	}
+	// defer rows.Close()
+
+	for rows.Next() {
+		comment := Comment{Post: &post}
+		err := rows.Scan(&comment.ID, &comment.Content, &comment.Author)
+		if err != nil {
+			fmt.Printf("Comments row scan error: %v\n\n", err)
+			return post, err
+		}
+		// fmt.Printf("Comment: %v\n", comment)
+		post.Comments = append(post.Comments, comment)
+	}
+
 	return post, nil
 }
 
@@ -60,42 +103,81 @@ func (post *Post) Delete() (err error) {
 	return
 }
 
-func Posts() {
+// Posts .
+func Posts(limit int) (posts []Post, err error) {
+	rows, err := Db.Query("SELECT id, content, author FROM posts LIMIT $1", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
+	for rows.Next() {
+		var post Post
+		err = rows.Scan(&post.ID, &post.Content, &post.Author)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+// Comments .
+func Comments(limit int) (comments []Comment, err error) {
+	rows, err := Db.Query("SELECT id, content, author FROM comments LIMIT $1", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var comment Comment
+		err = rows.Scan(&comment.ID, &comment.Content, &comment.Author)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+	return comments, nil
 }
 
 func main() {
-	// var err error
-	// Create a post
-	// post := Post{Content: "Hello World!", Author: "Sau Sheong"}
-	// fmt.Println(post)
-	// err = post.Create()
-	// if err != nil {
-	// 	fmt.Printf("Error inserting post: %v\n", err)
+	// posts := []Post{
+	// 	Post{Content: "Guiltless Home", Author: "Ben"},
+	// 	Post{Content: "Parallel Ducks", Author: "Hannah"},
+	// 	Post{Content: "Charge Railway", Author: "Junior Ben"},
+	// 	Post{Content: "Discovery Plane", Author: "Surya"},
+	// 	Post{Content: "Pack Deer", Author: "Keren"},
 	// }
-	// fmt.Println(post)
 
-	// Retrieve a post
-	// readPost, err := GetPost(1)
-	// fmt.Printf("Post read: %v\n\n", readPost)
+	// for _, p := range posts {
+	// 	p.Create()
+	// }
+	// post := Post{
+	// 	Content: "Pack Deer",
+	// 	Author:  "Gun",
+	// }
+	// post.Create()
 
-	// Update the post
-	// readPost.Content = "Once up on a time in China"
-	// readPost.Author = "Huang Ho"
-	// readPost.Update()
+	// comment := Comment{
+	// 	Content: "Parallel Ducks",
+	// 	Author:  "Hannah",
+	// 	Post:    &post,
+	// }
+	// comment.Create()
 
-	// Delete the post
-	// readPost.Delete()
+	// comment = Comment{
+	// 	Content: "Charge Railway",
+	// 	Author:  "Junior Ben",
+	// 	Post:    &post,
+	// }
+	// comment.Create()
 
-	posts := []Post{
-		Post{Content: "Guiltless Home", Author: "Ben"},
-		Post{Content: "Parallel Ducks", Author: "Hannah"},
-		Post{Content: "Charge Railway", Author: "Junior Ben"},
-		Post{Content: "Discovery Plane", Author: "Surya"},
-		Post{Content: "Pack Deer", Author: "Keren"},
-	}
+	readPost, _ := GetPost(3)
+	fmt.Printf("readPost: %v\n\n", readPost)
+	fmt.Printf("readPost.Comments: %v\n\n", readPost.Comments)
+	fmt.Println(readPost.Comments[0].Post)
 
-	for _, p := range posts {
-		p.Create()
-	}
+	// comments, _ := Comments(2)
+	// fmt.Printf("comments: %v\n\n", comments)
 }
