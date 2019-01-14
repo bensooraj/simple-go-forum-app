@@ -60,26 +60,42 @@ func (post *Post) Delete() (err error) {
 	return
 }
 
+func Posts() {
+
+}
+
 func main() {
-	var err error
+	// var err error
 	// Create a post
-	post := Post{Content: "Hello World!", Author: "Sau Sheong"}
-	fmt.Println(post)
-	err = post.Create()
-	if err != nil {
-		fmt.Printf("Error inserting post: %v\n", err)
-	}
-	fmt.Println(post)
+	// post := Post{Content: "Hello World!", Author: "Sau Sheong"}
+	// fmt.Println(post)
+	// err = post.Create()
+	// if err != nil {
+	// 	fmt.Printf("Error inserting post: %v\n", err)
+	// }
+	// fmt.Println(post)
 
 	// Retrieve a post
-	readPost, err := GetPost(1)
-	fmt.Printf("Post read: %v\n\n", readPost)
+	// readPost, err := GetPost(1)
+	// fmt.Printf("Post read: %v\n\n", readPost)
 
 	// Update the post
-	readPost.Content = "Once up on a time in China"
-	readPost.Author = "Huang Ho"
-	readPost.Update()
+	// readPost.Content = "Once up on a time in China"
+	// readPost.Author = "Huang Ho"
+	// readPost.Update()
 
 	// Delete the post
-	readPost.Delete()
+	// readPost.Delete()
+
+	posts := []Post{
+		Post{Content: "Guiltless Home", Author: "Ben"},
+		Post{Content: "Parallel Ducks", Author: "Hannah"},
+		Post{Content: "Charge Railway", Author: "Junior Ben"},
+		Post{Content: "Discovery Plane", Author: "Surya"},
+		Post{Content: "Pack Deer", Author: "Keren"},
+	}
+
+	for _, p := range posts {
+		p.Create()
+	}
 }
