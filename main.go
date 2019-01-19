@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -32,7 +33,7 @@ func init() {
 	connStr := "user=gwp password=gwp dbname=gwp sslmode=disable host=localhost port=5432"
 	Db, err = sqlx.Open("postgres", connStr)
 	if err != nil {
-		panic(err)
+		// panic(err)
 	}
 }
 
@@ -174,11 +175,20 @@ func main() {
 	// }
 	// comment.Create()
 
-	readPost, _ := GetPost(4)
-	fmt.Printf("readPost: %v\n\n", readPost)
-	fmt.Printf("readPost.Comments: %v\n\n", readPost.Comments)
-	fmt.Println(readPost.Comments[0].Post)
+	// readPost, _ := GetPost(4)
+	// fmt.Printf("readPost: %v\n\n", readPost)
+	// fmt.Printf("readPost.Comments: %v\n\n", readPost.Comments)
+	// fmt.Println(readPost.Comments[0].Post)
 
 	// comments, _ := Comments(2)
 	// fmt.Printf("comments: %v\n\n", comments)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	printNumbers2(&wg)
+	printLetters2(&wg)
+	wg.Wait()
+	fmt.Println()
+	fmt.Println()
+
 }
