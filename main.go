@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -162,11 +161,35 @@ func main() {
 	// if result1 && result2 {
 	// 	fmt.Println("Both the results are true!")
 	// }
-	c := make(chan int, 2)
-	go thrower(c)
-	go catcher(c)
+	// c := make(chan int, 2)
+	// go thrower(c)
+	// go catcher(c)
 
-	time.Sleep(100 * time.Millisecond)
-	fmt.Println("Hello, Ben!")
+	// time.Sleep(100 * time.Millisecond)
+	// fmt.Println("Hello, Ben!")
 
+	var msg string
+	okA, okB := true, true
+	a, b := make(chan string), make(chan string)
+	go callerA(a)
+	go callerB(b)
+
+	for okA || okB {
+		select {
+		case msg, okA = <-a:
+			fmt.Println("msg A: ", msg)
+			fmt.Println("okA: ", okA)
+			if okA {
+				fmt.Printf("%s from A\n", msg)
+			}
+		case msg, okB = <-b:
+			fmt.Println("msg B: ", msg)
+			fmt.Println("okB: ", okB)
+			if okB {
+				fmt.Printf("%s from B\n", msg)
+			}
+		}
+	}
+
+	// time.Sleep(100 * time.Millisecond)
 }

@@ -68,3 +68,13 @@ func catcher(c chan int) {
 		fmt.Println("Caught  <<", num)
 	}
 }
+
+func callerA(c chan string) {
+	c <- "Hello, World!"
+	close(c)
+}
+
+func callerB(c chan string) {
+	c <- "Hola, Mundo!"
+	close(c)
+}
