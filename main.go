@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"sync"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -144,51 +144,29 @@ func Comments(limit int) (comments []Comment, err error) {
 }
 
 func main() {
-	// posts := []Post{
-	// 	Post{Content: "Guiltless Home", Author: "Ben"},
-	// 	Post{Content: "Parallel Ducks", Author: "Hannah"},
-	// 	Post{Content: "Charge Railway", Author: "Junior Ben"},
-	// 	Post{Content: "Discovery Plane", Author: "Surya"},
-	// 	Post{Content: "Pack Deer", Author: "Keren"},
+	// var wg sync.WaitGroup
+	// wg.Add(2)
+	// go printNumbers2(&wg)
+	// go printLetters2(&wg)
+	// wg.Wait()
+	// fmt.Println()
+	// fmt.Println()
+
+	// w1, w2 := make(chan bool), make(chan bool)
+	// go printNumbers2(w1)
+	// go printLetters2(w2)
+
+	// result1 := <-w1
+	// result2 := <-w2
+
+	// if result1 && result2 {
+	// 	fmt.Println("Both the results are true!")
 	// }
+	c := make(chan int, 2)
+	go thrower(c)
+	go catcher(c)
 
-	// for _, p := range posts {
-	// 	p.Create()
-	// }
-	// post := Post{
-	// 	Content:    "Pack Deer",
-	// 	AuthorName: "Gun",
-	// }
-	// post.Create()
-
-	// comment := Comment{
-	// 	Content: "Parallel Ducks",
-	// 	Author:  "Hannah",
-	// 	Post:    &post,
-	// }
-	// comment.Create()
-
-	// comment = Comment{
-	// 	Content: "Charge Railway",
-	// 	Author:  "Junior Ben",
-	// 	Post:    &post,
-	// }
-	// comment.Create()
-
-	// readPost, _ := GetPost(4)
-	// fmt.Printf("readPost: %v\n\n", readPost)
-	// fmt.Printf("readPost.Comments: %v\n\n", readPost.Comments)
-	// fmt.Println(readPost.Comments[0].Post)
-
-	// comments, _ := Comments(2)
-	// fmt.Printf("comments: %v\n\n", comments)
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-	printNumbers2(&wg)
-	printLetters2(&wg)
-	wg.Wait()
-	fmt.Println()
-	fmt.Println()
+	time.Sleep(100 * time.Millisecond)
+	fmt.Println("Hello, Ben!")
 
 }

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"sync"
+	"time"
 )
 
 func printNumbers1() {
@@ -27,20 +27,22 @@ func goPrint1() {
 	go printLetters1()
 }
 
-func printNumbers2(wg *sync.WaitGroup) {
-	for i := 0; i < 100; i++ {
-		// time.Sleep(1 * time.Microsecond)
+func printNumbers2(w chan bool) {
+	for i := 0; i < 10; i++ {
+		time.Sleep(1 * time.Microsecond)
 		fmt.Printf("%d ", i)
 	}
-	wg.Done()
+	fmt.Println()
+	w <- true
 }
 
-func printLetters2(wg *sync.WaitGroup) {
-	for i := 'A'; i < 'A'+100; i++ {
-		// time.Sleep(1 * time.Microsecond)
+func printLetters2(w chan bool) {
+	for i := 'A'; i < 'A'+10; i++ {
+		time.Sleep(1 * time.Microsecond)
 		fmt.Printf("%c ", i)
 	}
-	wg.Done()
+	fmt.Println()
+	w <- true
 }
 
 func print2() {
@@ -51,4 +53,18 @@ func print2() {
 func goPrint2() {
 	// go printNumbers2()
 	// go printLetters2()
+}
+
+func thrower(c chan int) {
+	for i := 0; i < 5; i++ {
+		c <- i
+		fmt.Println("Threw  >>", i)
+	}
+}
+
+func catcher(c chan int) {
+	for i := 0; i < 5; i++ {
+		num := <-c
+		fmt.Println("Caught  <<", num)
+	}
 }
